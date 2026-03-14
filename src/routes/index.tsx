@@ -34,9 +34,11 @@ function SkillsHome() {
   const [popular, setPopular] = useState<SkillPageEntry[]>([])
 
   useEffect(() => {
+    let cancelled = false
     convexHttp
       .query(api.skills.listHighlightedPublic, { limit: 6 })
-      .then((r) => setHighlighted(r as SkillPageEntry[]))
+      .then((r) => { if (!cancelled) setHighlighted(r as SkillPageEntry[]) })
+      .catch(() => {})
     convexHttp
       .query(api.skills.listPublicPageV2, {
         paginationOpts: { cursor: null, numItems: 12 },
@@ -44,7 +46,9 @@ function SkillsHome() {
         dir: 'desc',
         nonSuspiciousOnly: true,
       })
-      .then((r) => setPopular((r as { page: SkillPageEntry[] }).page))
+      .then((r) => { if (!cancelled) setPopular((r as { page: SkillPageEntry[] }).page) })
+      .catch(() => {})
+    return () => { cancelled = true }
   }, [])
 
   return (
